@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Просмотр видео{% endblock %}
+
+{% block content %}
+<h1>{{ video.filename }}</h1>
+<div class="row">
+    {% for frame in frames %}
+    <div class="col-md-4 mb-4">
+        <img src="/media/{{ video.folder }}/frames/{{ frame }}" class="img-fluid">
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

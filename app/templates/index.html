@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Список видео{% endblock %}
+
+{% block content %}
+<h1>Загруженные видео</h1>
+<div class="row">
+    {% for video in videos %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ video.filename }}</h5>
+                <a href="/video/{{ video.id }}" class="btn btn-primary">Просмотреть</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

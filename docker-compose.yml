@@ -1,0 +1,124 @@
+version: "3.8"
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: video-processing:latest
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+      - ./media:/app/media
+    ports:
+      - "8001:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ENDPOINT=minio:9000
+    depends_on:
+      - redis
+      - minio
+    networks:
+      - minio-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # Воркер для скачивания видео
+  download_worker:
+    image: video-processing:latest
+    command: celery -A app.worker worker --loglevel=info --queues=download_queue --concurrency=1
+    volumes:
+      - .:/app
+      - ./media:/app/media
+    depends_on:
+      - redis
+      - app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    networks:
+      - minio-network
+
+  # Воркеры для обработки видео
+  video_processing_worker:
+    image: video-processing:latest
+    command: celery -A app.worker worker --loglevel=info --queues=video_processing_queue --concurrency=2
+    volumes:
+      - .:/app
+      - ./media:/app/media
+    depends_on:
+      - redis
+      - app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    networks:
+      - minio-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # Воркер для стриминга видео
+  video_stream_worker:
+    image: video-processing:latest
+    command: celery -A app.utils.video_stream worker --loglevel=info --queues=video_stream_queue --concurrency=1
+    volumes:
+      - .:/app
+      - ./media:/app/media
+    depends_on:
+      - redis
+      - minio
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    networks:
+      - minio-network
+
+  redis:
+    image: redis:alpine
+    container_name: redis-queue
+    ports:
+      - "6379:6379"
+    networks:
+      - minio-network
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_HTTP_TRACE=/var/log/minio.log
+    command: server --console-address ":9001" /data
+    volumes:
+      - minio_data:/data
+      - minio_log:/var/log
+    networks:
+      - minio-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 80s
+
+networks:
+  minio-network:
+    driver: bridge
+
+volumes:
+  minio_data:
+  minio_log:

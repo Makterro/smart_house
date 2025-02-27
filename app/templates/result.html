@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Обработанное видео</title>
+</head>
+<body>
+    <h2>Результат</h2>
+    {% if video_url %}
+        <video width="640" height="480" controls>
+            <source src="{{ video_url }}" type="video/mp4">
+            Ваш браузер не поддерживает видео.
+        </video>
+    {% else %}
+        <p>Видео еще не обработано</p>
+    {% endif %}
+    <a href="/">Назад</a>
+</body>
+</html>

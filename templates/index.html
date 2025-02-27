@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Список видео{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Форма загрузки -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Загрузить новое видео</h5>
+            <form id="uploadForm" class="mt-3">
+                <div class="mb-3">
+                    <input type="file" class="form-control" id="videoFile" accept="video/*" required>
+                </div>
+                <button type="button" id="uploadButton" class="btn btn-primary" disabled>
+                    Загрузить видео
+                </button>
+            </form>
+            <div id="uploadProgress" class="progress mt-3 d-none">
+                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список видео -->
+    <h2>Загруженные видео</h2>
+    <div class="row" id="videoList">
+        {% for video in videos %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ video.filename }}</h5>
+                    <p class="card-text">
+                        <small class="text-muted">Загружено: {{ video.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                    </p>
+                    <a href="{{ settings.API_V1_STR }}/video/{{ video.id }}" class="btn btn-primary">Просмотреть</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const videoInput = document.getElementById('videoFile');
+    const uploadButton = document.getElementById('uploadButton');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressBar = uploadProgress.querySelector('.progress-bar');
+    const videoList = document.getElementById('videoList');
+    const apiPrefix = '{{ settings.API_V1_STR }}';
+
+    // Активация кнопки загрузки при выборе файла
+    videoInput.addEventListener('change', function() {
+        uploadButton.disabled = !this.files.length;
+    });
+
+    // Обработка загрузки видео
+    uploadButton.addEventListener('click', async function() {
+        const file = videoInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        uploadButton.disabled = true;
+        uploadProgress.classList.remove('d-none');
+
+        try {
+            const response = await fetch(`${apiPrefix}/upload/`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('Ошибка загрузки');
+            }
+
+            const result = await response.json();
+            
+            // Перезагрузка страницы после успешной загрузки
+            window.location.reload();
+
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('Произошла ошибка при загрузке видео');
+        } finally {
+            uploadButton.disabled = false;
+            uploadProgress.classList.add('d-none');
+            progressBar.style.width = '0%';
+            videoInput.value = '';
+        }
+    });
+});
+</script>
+
+{% endblock %} 

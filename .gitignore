@@ -1,0 +1,46 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# Database
+*.db
+*.sqlite3
+
+# Media files
+static/media/*
+!static/media/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Build system
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment variables
+.env

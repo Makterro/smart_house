@@ -1,0 +1,49 @@
+// there are not metadata
+{
+  'EventName': 's3:ObjectRemoved:Delete',
+  'Key': 'test/test.txt',
+  'Records': [
+    {
+      'eventVersion': '2.0',
+      'eventSource': 'minio:s3',
+      'awsRegion': '',
+      'eventTime': '2024-09-03T16:54:34.856Z',
+      'eventName': 's3:ObjectRemoved:Delete',
+      'userIdentity': {
+        'principalId': 'minioadmin'
+      },
+      'requestParameters': {
+        'principalId': 'minioadmin',
+        'region': '',
+        'sourceIPAddress': '172.18.0.1'
+      },
+      'responseElements': {
+        'content-length': '154',
+        'x-amz-id-2': 'dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8',
+        'x-amz-request-id': '17F1CA382991A9A6',
+        'x-minio-deployment-id': '96758e07-e9a5-414a-a81e-877a3ab4f4e6',
+        'x-minio-origin-endpoint': 'http://172.18.0.2:9000'
+      },
+      's3': {
+        's3SchemaVersion': '1.0',
+        'configurationId': 'Config',
+        'bucket': {
+          'name': 'test',
+          'ownerIdentity': {
+            'principalId': 'minioadmin'
+          },
+          'arn': 'arn:aws:s3:::test'
+        },
+        'object': {
+          'key': 'test.txt',
+          'sequencer': '17F1CA382B82A2AF'
+        }
+      },
+      'source': {
+        'host': '172.18.0.1',
+        'port': '',
+        'userAgent': 'MinIO (linux; amd64) minio-go/v7.0.73 MinIO Console/(dev)'
+      }
+    }
+  ]
+}
