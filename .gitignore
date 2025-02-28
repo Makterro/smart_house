@@ -46,3 +46,4 @@ var/
 .env
 yolov8x-pose.pt
 test1.mp4
+media/

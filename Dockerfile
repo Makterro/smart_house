@@ -11,19 +11,9 @@ RUN apt-get update && apt-get install --no-install-recommends --no-install-sugge
     python3-venv \
     && apt clean && rm -rf /var/lib/apt/lists/*
 
-# Установка FFmpeg и кодеков
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgstreamer1.0-0 \
-    gstreamer1.0-plugins-base \
-    gstreamer1.0-plugins-good \
-    gstreamer1.0-plugins-bad \
-    gstreamer1.0-plugins-ugly \
-    gstreamer1.0-libav \
-    && rm -rf /var/lib/apt/lists/*
+# Установка FFmpeg
+RUN apt-get update && apt-get install -y ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
 
 # Создание рабочей директории
 WORKDIR /app

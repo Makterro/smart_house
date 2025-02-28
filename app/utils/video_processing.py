@@ -5,6 +5,8 @@ import torch
 from ultralytics import YOLO
 from pathlib import Path
 import json
+import subprocess
+import shutil
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,8 +20,11 @@ def process_video(video_name: str, output_name: str, video_folder: str, frame_st
     video_path = Path("media") / video_folder / video_name
     output_path = Path("media") / video_folder / output_name
     frames_dir = Path("media") / video_folder / "frames"
+    temp_frames_dir = Path("media") / video_folder / "temp_frames"
 
+    # Создаем необходимые директории
     frames_dir.mkdir(exist_ok=True)
+    temp_frames_dir.mkdir(exist_ok=True)
 
     logger.info(f"🚀 Начинаем обработку видео: {video_path}")
 
@@ -31,8 +36,6 @@ def process_video(video_name: str, output_name: str, video_folder: str, frame_st
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fourcc = cv2.VideoWriter_fourcc(*'H','2','6','4')
-    out = cv2.VideoWriter(str(output_path), fourcc, fps, (frame_width, frame_height))
 
     frame_count = 0
     if frame_step == "all":
@@ -45,6 +48,7 @@ def process_video(video_name: str, output_name: str, video_folder: str, frame_st
         logger.warning("⚠️ Некорректное значение frame_step, используем 'fps'")
         step = fps
 
+    processed_frames = 0
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -54,7 +58,10 @@ def process_video(video_name: str, output_name: str, video_folder: str, frame_st
             results = yolo_model(source=frame, conf=0.3, imgsz=640, device='0')
             
             annotated_frame = results[0].plot()
-            out.write(annotated_frame)
+            # Сохраняем обработанный кадр во временную директорию
+            frame_filename = f"frame_{processed_frames:06d}.jpg"
+            cv2.imwrite(str(temp_frames_dir / frame_filename), annotated_frame)
+            processed_frames += 1
 
             for result in results:
                 boxes = result.boxes.xyxy.cpu().numpy()
@@ -71,7 +78,29 @@ def process_video(video_name: str, output_name: str, video_folder: str, frame_st
         frame_count += 1
 
     cap.release()
-    out.release()
+
+    # Собираем видео из кадров с помощью ffmpeg
+    try:
+        ffmpeg_cmd = [
+            'ffmpeg',
+            '-framerate', str(fps),
+            '-i', str(temp_frames_dir / 'frame_%06d.jpg'),
+            '-c:v', 'libx264',
+            '-preset', 'medium',
+            '-crf', '23',
+            '-y',
+            str(output_path)
+        ]
+        logger.info("🎥 Собираем видео с помощью ffmpeg...")
+        subprocess.run(ffmpeg_cmd, check=True)
+        logger.info(f"✅ Видео успешно создано: {output_path}")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"❌ Ошибка при создании видео через ffmpeg: {e}")
+    finally:
+        # Удаляем временную директорию с кадрами
+        if temp_frames_dir.exists():
+            shutil.rmtree(temp_frames_dir)
+            logger.info("🧹 Временные файлы удалены")
 
     logger.info(f"✅ Обработка завершена, результат сохранен: {output_path}")
     return output_name
