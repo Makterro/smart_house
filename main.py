@@ -59,7 +59,7 @@ app.include_router(webhook.router, prefix=settings.API_V1_STR)
 async def startup_event():
     """Запускается при старте приложения"""
     try:
-        video_path = Path("media/test1.mp4")
+        video_path = Path("test1.mp4")
         if video_path.exists():
             logger.info(f"Запуск стриминга видео: {video_path}")
             stream_video_task.delay(str(video_path))

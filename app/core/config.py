@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     DEBUG: bool
     
     # MinIO настройки
-    MINIO_ENDPOINT: str = "http://localhost:9000"
+    MINIO_ENDPOINT: str = "http://minio:9000"
     MINIO_ACCESS_KEY: str = "minioadmin"  # значение по умолчанию
     MINIO_SECRET_KEY: str = "minioadmin"  # значение по умолчанию
     

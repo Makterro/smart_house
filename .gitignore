@@ -44,3 +44,5 @@ var/
 
 # Environment variables
 .env
+yolov8x-pose.pt
+test1.mp4

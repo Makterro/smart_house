@@ -16,26 +16,33 @@ async def minio_webhook(
     db: Session = Depends(get_db)
 ):
     try:
-        if event.EventName != "s3:ObjectCreated:Put":
-            return {"message": "Ignored non-creation event"}
+        logger.info(f"Получено событие MinIO: {event.EventName}")
+
+        if event.EventName not in ["s3:ObjectCreated:Put", "s3:ObjectCreated:CompleteMultipartUpload"]:
+            logger.info(f"Игнорируем событие: {event.EventName}")
+            return {"message": "Ignored event"}
 
         for record in event.Records:
             bucket_name = record.s3.bucket.name
             object_key = record.s3.object.key
-            
+            logger.info(f"Обнаружен новый объект в MinIO: {object_key} (Bucket: {bucket_name})")
+
             folder_name = VideoService.generate_folder_name(object_key)
+            logger.info(f"Сгенерировано имя папки: {folder_name}")
+
             video = VideoService.create_video(
                 db=db,
                 filename=os.path.basename(object_key),
                 folder=folder_name
             )
-            
+            logger.info(f"Создана запись видео в БД: ID {video.id}, Filename {video.filename}")
+
             download_video_task.delay(bucket_name, object_key, video.id)
-            
-            logger.info(f"Started processing video: {video.id}")
-            
+            logger.info(f"Отправлена Celery-задача на скачивание видео: {video.id}")
+
+        logger.info("Все объекты обработаны успешно")
         return {"message": "Processing started"}
-    
+
     except Exception as e:
-        logger.error(f"Error processing webhook: {e}")
-        return {"error": str(e)} 
+        logger.exception(f"Ошибка при обработке вебхука MinIO: {e}")
+        return {"error": str(e)}

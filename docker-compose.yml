@@ -72,7 +72,7 @@ services:
   # Воркер для стриминга видео
   video_stream_worker:
     image: video-processing:latest
-    command: celery -A app.utils.video_stream worker --loglevel=info --queues=video_stream_queue --concurrency=1
+    command: celery -A app.utils.video_stream worker --loglevel=info --queues=video_stream_queue
     volumes:
       - .:/app
       - ./media:/app/media
