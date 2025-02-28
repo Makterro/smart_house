@@ -101,11 +101,12 @@ services:
     environment:
       - MINIO_ROOT_USER=minioadmin
       - MINIO_ROOT_PASSWORD=minioadmin
-      - MINIO_HTTP_TRACE=/var/log/minio.log
+      - MINIO_HTTP_TRACE=/var/log/minio/minio.log
     command: server --console-address ":9001" /data
     volumes:
-      - minio_data:/data
-      - minio_log:/var/log
+      - minio_storage:/data
+      - minio_config:/root/.minio
+      - minio_logs:/var/log/minio
     networks:
       - minio-network
     healthcheck:
@@ -120,5 +121,15 @@ networks:
     driver: bridge
 
 volumes:
-  minio_data:
-  minio_log:
+  minio_storage:
+    name: minio_storage_data
+    driver: local
+  minio_config:
+    name: minio_config_data
+    driver: local
+  minio_logs:
+    name: minio_logs_data
+    driver: local
+  redis_data:
+    name: redis_queue_data
+    driver: local

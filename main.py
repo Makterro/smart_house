@@ -84,3 +84,12 @@ if __name__ == "__main__":
 
 
 # для подсоединения к сервису http://host.docker.internal:8000/api/v1/webhook/minio
+# uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+# Запуск воркера для скачивания
+# celery -A app.worker -b redis://localhost:6379/0 worker --loglevel=info --queues=download_queue --pool=solo
+
+# # Запуск воркера для обработки видео
+# celery -A app.worker -b redis://localhost:6379/0 worker --loglevel=info --queues=video_processing_queue --pool=solo
+
+# # Запуск воркера для стриминга
+# celery -A app.utils.video_stream -b redis://localhost:6379/0 worker --loglevel=info --queues=video_stream_queue --pool=solo

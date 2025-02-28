@@ -31,7 +31,7 @@ def process_video(video_name: str, output_name: str, video_folder: str, frame_st
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fourcc = cv2.VideoWriter_fourcc(*'X','2','6','4')
+    fourcc = cv2.VideoWriter_fourcc(*'H','2','6','4')
     out = cv2.VideoWriter(str(output_path), fourcc, fps, (frame_width, frame_height))
 
     frame_count = 0

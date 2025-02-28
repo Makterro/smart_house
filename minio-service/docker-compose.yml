@@ -25,6 +25,14 @@ services:
     networks:
       - minio-network
 
+  redis:
+    image: redis:alpine
+    container_name: redis-queue
+    ports:
+      - "6379:6379"
+    networks:
+      - minio-network
+
 networks:
   minio-network:
     name: minio-network
