@@ -49,12 +49,23 @@ def process_video_task(video_id: int):
         if not video:
             raise Exception(f"Video {video_id} not found")
 
-        processed_filename = process_video(
+        # Генерируем имя для обработанного файла
+        processed_filename = f"processed_{video.filename}"
+        
+        # Обрабатываем видео
+        result = process_video(
             video.filename,
-            video.processed_filename,
+            processed_filename,
             video.folder
         )
-        logger.info(f"Video processed successfully: {video_id}")
+        
+        # Обновляем запись в БД только если обработка прошла успешно
+        if result:
+            video.processed_filename = processed_filename
+            db.commit()
+            logger.info(f"Video processed successfully: {video_id}")
+        else:
+            logger.error(f"Failed to process video: {video_id}")
 
     except Exception as e:
         logger.error(f"Error in process_video_task: {e}")

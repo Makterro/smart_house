@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+    }
+    
+    .detected-persons {
+        height: 400px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #6c757d #f8f9fa;
+        padding: 10px;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+    
+    .detected-persons::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .detected-persons::-webkit-scrollbar-track {
+        background: #f8f9fa;
+    }
+    
+    .detected-persons::-webkit-scrollbar-thumb {
+        background-color: #6c757d;
+        border-radius: 3px;
+    }
+    
+    .video-list {
+        height: 400px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #6c757d #f8f9fa;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px;
+    }
+    
+    .video-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .video-list::-webkit-scrollbar-track {
+        background: #f8f9fa;
+    }
+    
+    .video-list::-webkit-scrollbar-thumb {
+        background-color: #6c757d;
+        border-radius: 3px;
+    }
+
+    .person-card {
+        width: calc(25% - 16px);
+        margin: 8px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+        background: #fff;
+    }
+
+    .person-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .person-thumbnail {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        cursor: pointer;
+    }
+
+    .video-item {
+        cursor: pointer;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s;
+    }
+
+    .video-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .video-item.active {
+        background-color: #e9ecef;
+    }
+
+    .current-video-info {
+        background-color: #f8f9fa;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+    }
+
+    .dangerous-actions {
+        margin-top: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .frames-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        padding: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Модальное окно для просмотра изображений -->
+<div class="modal fade" id="frameModal" tabindex="-1" aria-labelledby="frameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-light">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="frameModalLabel">Просмотр кадра</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <img src="" id="modalImage" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid py-4 bg-light" data-camera-id="{{ camera_id }}">
+    <div class="row g-4">
+        <!-- Левая колонка с видео -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="h4 fw-bold mb-0">Камера #{{ camera_id }}</h2>
+                        {% if latest_video %}
+                        <div class="text-end">
+                            <h6 class="text-primary mb-1">{{ latest_video.filename }}</h6>
+                            <small class="text-muted">{{ latest_video.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="ratio ratio-16x9 mb-4 rounded overflow-hidden shadow-sm">
+                        {% if latest_video %}
+                        <video id="videoPlayer" controls autoplay class="object-fit-contain bg-dark">
+                            <source src="/media/{{ latest_video.folder }}/{{ latest_video.filename }}" type="video/mp4">
+                            Ваш браузер не поддерживает видео.
+                        </video>
+                        {% else %}
+                        <div class="d-flex align-items-center justify-content-center bg-light">
+                            <div class="text-center text-muted">
+                                <i class="bi bi-camera-video-off fs-1"></i>
+                                <p class="mt-2">Нет доступных записей</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Опасные действия -->
+                    <div class="card bg-danger bg-opacity-10 border-danger border-opacity-25">
+                        <div class="card-body">
+                            <h3 class="h5 fw-bold text-danger mb-3">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                Опасные действия
+                            </h3>
+                            <div id="dangerousActions">
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-shield-check me-2"></i>
+                                    Опасных действий не обнаружено
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Правая панель -->
+        <div class="col-lg-4">
+            <!-- Список записей -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h3 class="h5 fw-bold mb-0">
+                        <i class="bi bi-camera-reels me-2"></i>
+                        Записи
+                    </h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush overflow-auto" style="max-height: 400px;">
+                        {% for video in videos %}
+                        <button class="list-group-item list-group-item-action {% if video.id == latest_video.id %}active{% endif %}"
+                                data-video-url="/media/{{ video.folder }}/{{ video.filename }}"
+                                data-video-name="{{ video.filename }}"
+                                data-video-time="{{ video.created_at.strftime('%Y-%m-%d %H:%M:%S') }}"
+                                onclick="playVideo(this)">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 {% if video.id == latest_video.id %}text-white{% endif %}">{{ video.filename }}</h6>
+                                    <small class="{% if video.id == latest_video.id %}text-white-50{% else %}text-muted{% endif %}">
+                                        <i class="bi bi-clock me-1"></i>
+                                        {{ video.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                    </small>
+                                </div>
+                                <i class="bi bi-play-circle {% if video.id == latest_video.id %}text-white{% else %}text-primary{% endif %}"></i>
+                            </div>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Обнаруженные люди -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h3 class="h5 fw-bold mb-0">
+                        <i class="bi bi-people me-2"></i>
+                        Обнаруженные люди
+                    </h3>
+                </div>
+                <div class="card-body p-0">
+                    <div id="detectedPersons" class="overflow-auto" style="max-height: 400px;">
+                        {% if latest_video %}
+                        <div class="row g-2 p-2">
+                            {% for frame in frames %}
+                            <div class="col-6">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <img src="/media/{{ latest_video.folder }}/frames/{{ frame }}"
+                                         class="card-img-top object-fit-cover"
+                                         style="height: 120px;"
+                                         alt="Person"
+                                         data-bs-toggle="modal"
+                                         data-bs-target="#frameModal"
+                                         onclick="showImage(this.src)">
+                                    <div class="card-body p-2 text-center">
+                                        <small class="text-muted">Кадр {{ loop.index }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const videoPlayer = document.getElementById('videoPlayer');
+const frameModal = document.getElementById('frameModal');
+const modalImage = document.getElementById('modalImage');
+
+function showImage(src) {
+    modalImage.src = src;
+    const modal = new bootstrap.Modal(frameModal);
+    modal.show();
+}
+
+// Функция для обновления списка видео
+async function updateVideoList() {
+    try {
+        const cameraId = document.querySelector('.container-fluid').dataset.cameraId;
+        const response = await fetch(`/api/v1/camera/${cameraId}/videos`);
+        const data = await response.json();
+        
+        const videoList = document.querySelector('.list-group.list-group-flush');
+        const currentActiveVideo = document.querySelector('.list-group-item.active');
+        const currentVideoUrl = currentActiveVideo ? currentActiveVideo.dataset.videoUrl : null;
+        
+        // Обновляем список видео
+        let newHtml = '';
+        data.videos.forEach(video => {
+            const isActive = currentVideoUrl === `/media/${video.folder}/${video.filename}`;
+            newHtml += `
+                <button class="list-group-item list-group-item-action ${isActive ? 'active' : ''}"
+                        data-video-url="/media/${video.folder}/${video.filename}"
+                        data-video-name="${video.filename}"
+                        data-video-time="${video.created_at}"
+                        onclick="playVideo(this)">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 ${isActive ? 'text-white' : ''}">${video.filename}</h6>
+                            <small class="${isActive ? 'text-white-50' : 'text-muted'}">
+                                <i class="bi bi-clock me-1"></i>
+                                ${video.created_at}
+                            </small>
+                        </div>
+                        <i class="bi bi-play-circle ${isActive ? 'text-white' : 'text-primary'}"></i>
+                    </div>
+                </button>
+            `;
+        });
+        
+        // Если есть новые видео и нет активного видео, запускаем последнее
+        if (data.videos.length > 0 && !currentActiveVideo) {
+            videoList.innerHTML = newHtml;
+            const firstVideo = document.querySelector('.list-group-item');
+            if (firstVideo) {
+                playVideo(firstVideo);
+            }
+        } else {
+            videoList.innerHTML = newHtml;
+        }
+    } catch (error) {
+        console.error('Ошибка при обновлении списка видео:', error);
+    }
+}
+
+function loadDetectedPersons(videoUrl) {
+    const detectedPersons = document.getElementById('detectedPersons');
+    detectedPersons.innerHTML = '';
+    
+    const videoFolder = videoUrl.split('/')[2];
+    
+    fetch(`/api/v1/camera/${document.querySelector('.container-fluid').dataset.cameraId}/frames/${videoFolder}`)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.createElement('div');
+            container.className = 'row g-2 p-2';
+            
+            data.frames.forEach((frame, index) => {
+                const col = document.createElement('div');
+                col.className = 'col-6';
+                
+                col.innerHTML = `
+                    <div class="card h-100 border-0 shadow-sm">
+                        <img src="/media/${videoFolder}/frames/${frame}"
+                             class="card-img-top object-fit-cover"
+                             style="height: 120px;"
+                             alt="Person"
+                             data-bs-toggle="modal"
+                             data-bs-target="#frameModal"
+                             onclick="showImage(this.src)">
+                        <div class="card-body p-2 text-center">
+                            <small class="text-muted">Кадр ${index + 1}</small>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(col);
+            });
+            
+            detectedPersons.appendChild(container);
+        })
+        .catch(error => console.error('Error loading persons:', error));
+}
+
+function updateCurrentVideoInfo(name, time) {
+    const videoInfo = document.querySelector('.text-end');
+    if (videoInfo) {
+        videoInfo.innerHTML = `
+            <h6 class="text-primary mb-1">${name}</h6>
+            <small class="text-muted">${time}</small>
+        `;
+    }
+}
+
+function playVideo(element) {
+    document.querySelectorAll('.list-group-item').forEach(item => {
+        item.classList.remove('active');
+        item.querySelector('h6').classList.remove('text-white');
+        item.querySelector('small').classList.remove('text-white-50');
+        item.querySelector('small').classList.add('text-muted');
+        item.querySelector('.bi-play-circle').classList.remove('text-white');
+        item.querySelector('.bi-play-circle').classList.add('text-primary');
+    });
+    
+    element.classList.add('active');
+    element.querySelector('h6').classList.add('text-white');
+    element.querySelector('small').classList.add('text-white-50');
+    element.querySelector('small').classList.remove('text-muted');
+    element.querySelector('.bi-play-circle').classList.add('text-white');
+    element.querySelector('.bi-play-circle').classList.remove('text-primary');
+    
+    updateCurrentVideoInfo(
+        element.dataset.videoName,
+        element.dataset.videoTime
+    );
+    
+    videoPlayer.src = element.dataset.videoUrl;
+    videoPlayer.play();
+    
+    loadDetectedPersons(element.dataset.videoUrl);
+}
+
+// Обработчик окончания видео
+videoPlayer.addEventListener('ended', () => {
+    const currentVideo = document.querySelector('.list-group-item.active');
+    const nextVideo = currentVideo.nextElementSibling;
+    
+    if (nextVideo) {
+        playVideo(nextVideo);
+    } else {
+        updateVideoList().then(() => {
+            const newNextVideo = currentVideo.nextElementSibling;
+            if (newNextVideo) {
+                playVideo(newNextVideo);
+            }
+        });
+    }
+});
+
+// Автоматически запускаем последнее видео при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    const latestVideo = document.querySelector('.list-group-item');
+    if (latestVideo) {
+        playVideo(latestVideo);
+        videoPlayer.play().catch(error => {
+            console.log('Автовоспроизведение не удалось:', error);
+        });
+    }
+    
+    setInterval(updateVideoList, 1000);
+});
+</script>
+{% endblock %} 

@@ -17,9 +17,9 @@ celery.conf.task_routes = {
 }
 
 @celery.task(name='stream_video')
-def stream_video_task(video_path: str, bucket_name: str = "video-stream"):
+def stream_video_task(video_path: str, bucket_name: str = "video-stream", camera_id: int = 1):
     """Задача для стриминга видео в MinIO"""
-    logger.info(f"Запуск задачи stream_video_task с видео: {video_path}")
+    logger.info(f"Запуск задачи stream_video_task с видео: {video_path} для камеры {camera_id}")
     
     try:
         minio_service = MinioService()
@@ -49,8 +49,9 @@ def stream_video_task(video_path: str, bucket_name: str = "video-stream"):
 
         while current_time < duration:
             try:
-                # Создаем путь для чанка
-                chunk_path = Path("media/chunks") / f"chunk_{chunk_count}.mp4"
+                # Создаем путь для чанка с ID камеры
+                chunk_filename = f"camera_{camera_id}_chunk_{chunk_count}.mp4"
+                chunk_path = Path("media/chunks") / chunk_filename
                 chunk_path.parent.mkdir(parents=True, exist_ok=True)
 
                 # Вырезаем 15-секундный чанк
@@ -65,11 +66,11 @@ def stream_video_task(video_path: str, bucket_name: str = "video-stream"):
                     '-y',
                     str(chunk_path)
                 ]
-                logger.info(f"Создаем чанк {chunk_count} начиная с {current_time} секунды...")
+                logger.info(f"Создаем чанк {chunk_count} начиная с {current_time} секунды для камеры {camera_id}...")
                 subprocess.run(ffmpeg_cmd, check=True)
 
                 # Отправляем чанк в MinIO
-                object_name = f"chunk_{chunk_count}.mp4"
+                object_name = chunk_filename
                 logger.info(f"Загружаем чанк {chunk_path} в MinIO как {object_name}...")
                 minio_service.client.fput_object(
                     bucket_name,
@@ -97,3 +98,8 @@ def stream_video_task(video_path: str, bucket_name: str = "video-stream"):
 
     except Exception as e:
         logger.error(f"Ошибка в stream_video_task: {e}")
+    
+    finally:
+        # Запускаем задачу заново после завершения
+        logger.info("🔄 Перезапускаем обработку видео...")
+        stream_video_task.delay(video_path, bucket_name, camera_id)
