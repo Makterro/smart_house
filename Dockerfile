@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install --no-install-recommends --no-install-sugge
     python3 \
     python3-pip \
     python3-venv \
+    libgl1-mesa-glx \
     && apt clean && rm -rf /var/lib/apt/lists/*
 
 # Создание рабочей директории
