@@ -21,7 +21,7 @@ class VideoService:
         filename: str, 
         folder: str, 
         camera_id: int, 
-        start_time: datetime = None, фффф
+        start_time: datetime = None,
         end_time: datetime = None, 
     ):
         """Создание записи видео в базе данных и формирование ссылки на видео в MinIO"""
