@@ -3,6 +3,7 @@ from minio.error import S3Error
 from app.core.config import settings
 import os
 from pathlib import Path
+from minio.commonconfig import CopySource
 
 class MinioService:
     def __init__(self):
@@ -43,7 +44,7 @@ class MinioService:
             self.client.copy_object(
                 bucket_name,
                 object_name,
-                f"{bucket_name}/{object_name}",  # Путь к исходному объекту в формате 'bucket_name/object_name'
+                CopySource(bucket_name, object_name),  # Путь к исходному объекту в формате 'bucket_name/object_name'
                 metadata=new_metadata,
                 metadata_directive="REPLACE"
             )
