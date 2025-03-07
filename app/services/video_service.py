@@ -1,9 +1,8 @@
 import os
 import uuid
 from sqlalchemy.orm import Session
-from app.models.video import Video
+from app.models.video import Video, VideoStatus
 from app.core.config import settings
-from pathlib import Path
 from sqlalchemy import desc
 
 class VideoService:
@@ -35,6 +34,26 @@ class VideoService:
             db.commit()
             db.refresh(video)
         return video
+
+    @staticmethod
+    def update_video_status(db: Session, video_id: int, status: str):
+        """Обновляет статус видео"""
+        video = VideoService.get_video(db, video_id)
+        if video:
+            video.status = status
+            db.commit()
+            db.refresh(video)
+        return video
+
+    @staticmethod
+    def update_video_skeletons(db: Session, video_id: int, skeletons: list):
+        """Сохраняет найденные скелеты в видео"""
+        video = VideoService.get_video(db, video_id)
+        if video:
+            video.skeletons = skeletons
+            db.commit()
+            db.refresh(video)
+        return video
     
     @staticmethod
     def generate_folder_name(filename: str) -> str:
@@ -57,4 +76,15 @@ class VideoService:
         return db.query(Video)\
             .filter(Video.camera_id == camera_id)\
             .order_by(desc(Video.created_at))\
-            .first() 
+            .first()
+
+    @staticmethod
+    def save_video_actions(db: Session, video_id: int, actions: list):
+        """Сохраняет действия в JSONB поле видео"""
+        video = VideoService.get_video(db, video_id)
+        if video:
+            video.actions = actions
+            db.commit()
+            db.refresh(video)
+        return video
+    
