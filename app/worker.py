@@ -54,9 +54,10 @@ def process_video_task(video_id: int):
         
         # Обрабатываем видео
         result = process_video(
-            video.filename,
-            processed_filename,
-            video.folder
+            video_id,                 # video_id
+            video.filename,           # video_name
+            processed_filename,       # output_name
+            video.folder              # video_folder
         )
         
         # Обновляем запись в БД только если обработка прошла успешно

@@ -8,7 +8,6 @@ import logging
 import shutil
 import os
 from pathlib import Path
-from app.utils.video_stream import stream_video_task
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -54,19 +53,6 @@ templates.env.globals["settings"] = settings
 # Подключение роутеров
 app.include_router(video_api.router, prefix=settings.API_V1_STR)
 app.include_router(webhook.router, prefix=settings.API_V1_STR)
-
-@app.on_event("startup")
-async def startup_event():
-    """Запускается при старте приложения"""
-    try:
-        video_path = Path("test1.mp4")
-        if video_path.exists():
-            logger.info(f"Запуск стриминга видео: {video_path}")
-            stream_video_task.delay(str(video_path))
-        else:
-            logger.error(f"Видео не найдено: {video_path}")
-    except Exception as e:
-        logger.error(f"Ошибка при запуске стриминга: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_event():

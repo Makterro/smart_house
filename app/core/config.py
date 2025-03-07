@@ -8,13 +8,12 @@ class Settings(BaseSettings):
     DEBUG: bool
     
     # MinIO настройки
-    MINIO_ENDPOINT: str = "http://minio:9000"
+    MINIO_ENDPOINT: str = "89.105.137.28:9000"
     MINIO_ACCESS_KEY: str = "minioadmin"  # значение по умолчанию
     MINIO_SECRET_KEY: str = "minioadmin"  # значение по умолчанию
     REDIS_URL: str = 'redis://redis:6379'
     MINIO_ROOT_USER: str = 'minioadmin'
     MINIO_ROOT_PASSWORD: str = 'minioadmin'
-    MINIO_ENDPOINT: str = 'minio:9000'
 
 
     # Пути

@@ -21,6 +21,10 @@ yolo_model = YOLO(MODEL_PATH)
 def process_video(video_id: int, video_name: str, output_name: str, video_folder: str, frame_step="fps", retry=False):
     """Обработка видео: детекция и сохранение результата"""
     try:
+        # Работа с БД
+        db = SessionLocal()
+
+        VideoService.update_video_status(db, video_id, VideoStatus.PROCESSING)
         video_path = Path("media") / video_folder / video_name
         output_path = Path("media") / video_folder / output_name
 
@@ -49,15 +53,13 @@ def process_video(video_id: int, video_name: str, output_name: str, video_folder
 
                 for result in results:
                     if result.keypoints is not None:
-                        keypoints = result.keypoints.cpu().numpy().tolist()
+                        # Используем атрибут xy для координат ключевых точек
+                        keypoints = result.keypoints.xy.cpu().numpy().tolist()
                         skeletons.append({"frame": frame_count, "keypoints": keypoints})
 
             frame_count += 1
 
         cap.release()
-
-        # Работа с БД
-        db = SessionLocal()
 
         if skeletons:
             logger.info(f"✅ Найдено {len(skeletons)} кадров со скелетами в {video_name}")
@@ -66,13 +68,12 @@ def process_video(video_id: int, video_name: str, output_name: str, video_folder
 
             # Если это первый проход, меняем статус и перезапускаем обработку
             if not retry:
-                VideoService.update_video_status(db, video_id, VideoStatus.FIND_SKELET)
                 process_video(video_id, video_name, output_name, video_folder, frame_step="all", retry=True)
             else:
                 # Если это повторный проход — отправляем на детекцию и сохраняем все скелеты в БД
                 detect_actions(video_id)
                 VideoService.update_video_skeletons(db, video_id, skeletons)
-                minio_service.update_video_metadata(video_folder, video_name, skeletons_found = True)
+                minio_service.update_video_metadata("video-stream", video_name, skeletons_found = True)
                 
                 # Удаляем файл видео
                 try:
@@ -87,7 +88,7 @@ def process_video(video_id: int, video_name: str, output_name: str, video_folder
                 send_webhook(video)
 
         else:
-            minio_service.update_video_metadata(video_folder, video_name, skeletons_found = False)
+            minio_service.update_video_metadata("video-stream", video_name, skeletons_found = False)
 
         db.close()
 

@@ -6,6 +6,7 @@ from app.services.video_service import VideoService
 from app.worker import download_video_task
 import logging
 import os
+from datetime import datetime
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -27,26 +28,36 @@ async def minio_webhook(
             bucket_name = record.s3.bucket.name
             object_key = record.s3.object.key
             logger.info(f"Обнаружен объект: {object_key} (Bucket: {bucket_name})")
+            user_metadata = record.s3.object.userMetadata
+            logger.info(f"Метаданные объекта: {user_metadata}")
 
             # Для событий создания (Put или CompleteMultipartUpload)
             if event.EventName in ["s3:ObjectCreated:Put", "s3:ObjectCreated:CompleteMultipartUpload"]:
-                try:
-                    camera_id = int(object_key.split('_')[1])  # Определяем ID камеры из имени файла
-                except (IndexError, ValueError):
-                    camera_id = None
-                    logger.warning(f"Не удалось определить ID камеры из имени файла: {object_key}")
-
                 folder_name = VideoService.generate_folder_name(object_key)
                 logger.info(f"Сгенерировано имя папки: {folder_name}")
+
+                
+
+                # Преобразуем строки метаданных в datetime
+                start_time_str = user_metadata.get("X-Amz-Meta-Start", "Не указано")
+                end_time_str = user_metadata.get("X-Amz-Meta-End", "Не указано")
+
+                start_time = datetime.fromisoformat(start_time_str) if start_time_str != "Не указано" else None
+                end_time = datetime.fromisoformat(end_time_str) if end_time_str != "Не указано" else None
+                src_id = user_metadata.get("X-Amz-Meta-Src", "Не указано")
+
+                logger.info(f"Метаданные объекта: start_time={start_time}, end_time={end_time}, src_id={src_id}")
 
                 # Создаем видео в БД
                 video = VideoService.create_video(
                     db=db,
                     filename=os.path.basename(object_key),
                     folder=folder_name,
-                    camera_id=camera_id
+                    camera_id=src_id,
+                    start_time=start_time,
+                    end_time=end_time,
                 )
-                logger.info(f"Создана запись видео в БД: ID {video.id}, Filename {video.filename}, Camera {camera_id}")
+                logger.info(f"Создана запись видео в БД: ID {video.id}, Filename {video.filename}, Camera {src_id}")
 
                 # Отправляем задачу на скачивание видео
                 download_video_task.delay(bucket_name, object_key, video.id)

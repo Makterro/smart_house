@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install --no-install-recommends --no-install-sugge
     python3-pip \
     python3-venv \
     libgl1-mesa-glx \
+    libglib2.0-0 \
+    x264 libx264-dev \
     && apt clean && rm -rf /var/lib/apt/lists/*
 
 # Создание рабочей директории

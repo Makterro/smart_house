@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.models.video import Video, VideoStatus
 from app.core.config import settings
 from sqlalchemy import desc
+from datetime import datetime, timedelta
 
 class VideoService:
     @staticmethod
@@ -15,15 +16,24 @@ class VideoService:
         return db.query(Video).filter(Video.id == video_id).first()
     
     @staticmethod
-    def create_video(db: Session, filename: str, folder: str, camera_id: int):
+    def create_video(
+        db: Session, 
+        filename: str, 
+        folder: str, 
+        camera_id: int, 
+        start_time: datetime = None, фффф
+        end_time: datetime = None, 
+    ):
         """Создание записи видео в базе данных и формирование ссылки на видео в MinIO"""
         try:
-            # Создание записи видео в базе данных
+            # Создание записи видео в базе данных с дополнительными метаданными
             video = Video(
                 filename=filename,
                 folder=folder,
                 camera_id=camera_id,
-                status="pending"  # Начальный статус
+                status=VideoStatus.PENDING,
+                start_time=start_time,
+                end_time=end_time,
             )
             db.add(video)
             db.commit()
