@@ -31,6 +31,7 @@ class VideoService:
         video = VideoService.get_video(db, video_id)
         if video:
             video.actions = actions
+            video.detect = True  # Устанавливаем флаг detect в True, так как действия были обнаружены
             db.commit()
             db.refresh(video)
         return video
@@ -80,7 +81,7 @@ class VideoService:
 
     @staticmethod
     def save_video_actions(db: Session, video_id: int, actions: list):
-        """Сохраняет действия в JSONB поле видео"""
+        """Сохраняет действия в JSON поле видео"""
         video = VideoService.get_video(db, video_id)
         if video:
             video.actions = actions

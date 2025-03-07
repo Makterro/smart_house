@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Boolean
 from sqlalchemy.sql import func
 from app.db.base import Base
 import enum
@@ -20,5 +20,8 @@ class Video(Base):
     actions = Column(JSON, nullable=True)  # Хранение обнаруженных действий
     skeletons = Column(JSON, nullable=True)  # Данные скелетов от YOLO
     status = Column(Enum(VideoStatus), default=VideoStatus.PENDING, nullable=False)  # Статус обработки
+    detect = Column(Boolean, default=False, nullable=False)  # Флаг, указывающий, были ли обнаружены действия
+    start_time = Column(DateTime(timezone=True), nullable=True)  # Время начала записи
+    end_time = Column(DateTime(timezone=True), nullable=True)  # Время окончания записи
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
