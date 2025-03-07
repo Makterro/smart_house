@@ -2,6 +2,7 @@ import requests
 from datetime import datetime
 import uuid
 import logging
+from app.models.video import Video
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

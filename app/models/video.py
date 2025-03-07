@@ -25,3 +25,4 @@ class Video(Base):
     end_time = Column(DateTime(timezone=True), nullable=True)  # Время окончания записи
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    link = Column(String, nullable=True)  # Добавленное поле для хранения ссылки на видео в MinIO

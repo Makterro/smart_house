@@ -15,16 +15,31 @@ class VideoService:
         return db.query(Video).filter(Video.id == video_id).first()
     
     @staticmethod
-    def create_video(db: Session, filename: str, folder: str, camera_id: int = None):
-        video = Video(
-            filename=filename,
-            folder=folder,
-            camera_id=camera_id
-        )
-        db.add(video)
-        db.commit()
-        db.refresh(video)
-        return video
+    def create_video(db: Session, filename: str, folder: str, camera_id: int):
+        """Создание записи видео в базе данных и формирование ссылки на видео в MinIO"""
+        try:
+            # Создание записи видео в базе данных
+            video = Video(
+                filename=filename,
+                folder=folder,
+                camera_id=camera_id,
+                status="pending"  # Начальный статус
+            )
+            db.add(video)
+            db.commit()
+            db.refresh(video)
+
+            # Формируем ссылку на видео в MinIO
+            video_link = f"http://minio.example.com/{folder}/{filename}"
+            video.link = video_link
+
+            # Сохраняем ссылку в базе данных
+            db.commit()
+            db.refresh(video)
+            
+            return video
+        except Exception as e:
+            raise Exception(f"Ошибка при создании видео: {e}")
     
     @staticmethod
     def update_video_actions(db: Session, video_id: int, actions: list):

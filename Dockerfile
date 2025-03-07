@@ -11,10 +11,6 @@ RUN apt-get update && apt-get install --no-install-recommends --no-install-sugge
     python3-venv \
     && apt clean && rm -rf /var/lib/apt/lists/*
 
-# Установка FFmpeg
-RUN apt-get update && apt-get install -y ffmpeg && \
-    rm -rf /var/lib/apt/lists/*
-
 # Создание рабочей директории
 WORKDIR /app
 

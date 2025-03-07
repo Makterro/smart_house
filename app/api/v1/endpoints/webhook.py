@@ -37,6 +37,7 @@ async def minio_webhook(
             folder_name = VideoService.generate_folder_name(object_key)
             logger.info(f"Сгенерировано имя папки: {folder_name}")
 
+            # Создаем видео в БД и получаем объект video
             video = VideoService.create_video(
                 db=db,
                 filename=os.path.basename(object_key),
@@ -45,6 +46,7 @@ async def minio_webhook(
             )
             logger.info(f"Создана запись видео в БД: ID {video.id}, Filename {video.filename}, Camera {camera_id}")
 
+            # Отправляем задачу для скачивания видео
             download_video_task.delay(bucket_name, object_key, video.id)
             logger.info(f"Отправлена Celery-задача на скачивание видео: {video.id}")
 
