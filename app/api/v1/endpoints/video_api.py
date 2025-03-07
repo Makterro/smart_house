@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/camera/{camera_id}", response_class=JSONResponse)
-async def get_camera_videos(
+def get_camera_videos(
     camera_id: int,
     db: Session = Depends(get_db)
 ):
@@ -37,7 +37,7 @@ async def get_camera_videos(
     return JSONResponse(content={"videos": video_data})
 
 @router.get("/camera/{camera_id}/videos", response_class=JSONResponse)
-async def get_camera_videos(
+def get_camera_videos(
     camera_id: int,
     start: str = None,  # Опциональные параметры для фильтрации по времени
     finish: str = None,

@@ -12,12 +12,11 @@ def send_webhook(video: Video):
     camera_id = video.camera_id  # ID камеры
     start_time = video.start_time  # Время начала записи
     end_time = video.end_time  # Время окончания записи
-    actions = video.actions  # Извлекаем список действий из поля 'actions'
+    actions = video.actions if video.actions else None  # Извлекаем список действий из поля 'actions'
 
     # Проверяем, что действия действительно были обнаружены
     if not actions:
         logger.warning(f"❌ Не найдено действий в видео {video.id}")
-        return
 
     webhook_url = "http://example.com/webhook"  # Эндпоинт вебхука
     payload = {

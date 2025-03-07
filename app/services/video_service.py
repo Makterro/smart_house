@@ -40,7 +40,7 @@ class VideoService:
             db.refresh(video)
 
             # Формируем ссылку на видео в MinIO
-            video_link = f"http://minio.example.com/{folder}/{filename}"
+            video_link = f"http://89.105.137.28:9000/video-stream/{filename}"
             video.link = video_link
 
             # Сохраняем ссылку в базе данных
@@ -106,10 +106,11 @@ class VideoService:
 
     @staticmethod
     def save_video_actions(db: Session, video_id: int, actions: list):
-        """Сохраняет действия в JSON поле видео"""
+        """Сохраняет действия в JSON поле видео и меняет detect на True"""
         video = VideoService.get_video(db, video_id)
         if video:
             video.actions = actions
+            video.detect = True
             db.commit()
             db.refresh(video)
         return video

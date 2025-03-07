@@ -12,7 +12,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.post("/webhook/minio")
-async def minio_webhook(
+def minio_webhook(
     event: MinioWebhook,
     db: Session = Depends(get_db)
 ):
