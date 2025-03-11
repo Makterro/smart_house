@@ -6,13 +6,15 @@ from app.services.video_service import VideoService
 import logging
 from fastapi.responses import JSONResponse
 from datetime import datetime
+from uuid import UUID
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/camera/{camera_id}", response_class=JSONResponse)
 def get_camera_videos(
-    camera_id: int,
+    camera_id: UUID,
     db: Session = Depends(get_db)
 ):
     # Получаем все видео для данной камеры
@@ -38,9 +40,9 @@ def get_camera_videos(
 
 @router.get("/camera/{camera_id}/videos", response_class=JSONResponse)
 def get_camera_videos(
-    camera_id: int,
-    start: str = None,  # Опциональные параметры для фильтрации по времени
-    finish: str = None,
+    camera_id: UUID,
+    start: datetime = None,  # Опциональные параметры для фильтрации по времени
+    finish: datetime = None,
     db: Session = Depends(get_db)
 ):
     # Преобразуем строки start и finish в объекты datetime, если они есть

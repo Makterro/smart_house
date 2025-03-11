@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, JSON, Boolean, Enum
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import UUID
 from app.db.base import Base
 import enum
 
@@ -16,7 +17,7 @@ class Video(Base):
     filename = Column(String, nullable=False)
     processed_filename = Column(String, nullable=True)
     folder = Column(String, nullable=False)
-    camera_id = Column(Integer, nullable=True)  # ID камеры
+    camera_id = Column(UUID(as_uuid=True), nullable=True)
     actions = Column(JSON, nullable=True)  # Хранение обнаруженных действий
     skeletons = Column(JSON, nullable=True)  # Данные скелетов от YOLO
     status = Column(Enum(VideoStatus), default=VideoStatus.PENDING, nullable=False)  # Статус обработки
@@ -26,3 +27,5 @@ class Video(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     link = Column(String, nullable=True)  # Добавленное поле для хранения ссылки на видео в MinIO
+    link2 = Column(String, nullable=True)  # Добавленное поле для хранения ссылки на видео в MinIO
+    li12412 = Column(String, nullable=False)

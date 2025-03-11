@@ -13,42 +13,10 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def reset_app():
-    """Очистка медиа директории и пересоздание базы данных"""
-    logger.info("🔄 Сброс приложения...")
-    
-    # Очистка медиа директории
-    if settings.MEDIA_DIR.exists():
-        logger.info("🗑️ Очистка медиа директории...")
-        for item in settings.MEDIA_DIR.iterdir():
-            if item.is_file():
-                item.unlink()
-            elif item.is_dir():
-                shutil.rmtree(item)
-    
-    # Создание медиа директории
-    logger.info("📁 Создание медиа директории...")
-    settings.MEDIA_DIR.mkdir(exist_ok=True)
-    
-    # Пересоздание базы данных
-    logger.info("🔨 Пересоздание базы данных...")
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    
-    logger.info("✅ Сброс приложения завершен")
-
-# Сброс приложения при запуске только в режиме отладки
-if settings.DEBUG:
-    reset_app()
-
 app = FastAPI(title=settings.PROJECT_NAME)
 
 # Монтирование статических файлов
 app.mount("/media", StaticFiles(directory="media"), name="media")
-
-# Создание объекта шаблонов с контекстом по умолчанию
-templates = Jinja2Templates(directory="templates")
-templates.env.globals["settings"] = settings
 
 # Подключение роутеров
 app.include_router(video_api.router, prefix=settings.API_V1_STR)

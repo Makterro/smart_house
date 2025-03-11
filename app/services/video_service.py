@@ -5,6 +5,7 @@ from app.models.video import Video, VideoStatus
 from app.core.config import settings
 from sqlalchemy import desc
 from datetime import datetime, timedelta
+from uuid import UUID
 
 class VideoService:
     @staticmethod
@@ -20,7 +21,7 @@ class VideoService:
         db: Session, 
         filename: str, 
         folder: str, 
-        camera_id: int, 
+        camera_id: UUID, 
         start_time: datetime = None,
         end_time: datetime = None, 
     ):
@@ -40,7 +41,7 @@ class VideoService:
             db.refresh(video)
 
             # Формируем ссылку на видео в MinIO
-            video_link = f"http://89.105.137.28:9000/video-stream/{filename}"
+            video_link = f"http://{settings.MINIO_ENDPOINT}/video-stream/{filename}"
             video.link = video_link
 
             # Сохраняем ссылку в базе данных
@@ -50,16 +51,6 @@ class VideoService:
             return video
         except Exception as e:
             raise Exception(f"Ошибка при создании видео: {e}")
-    
-    @staticmethod
-    def update_video_actions(db: Session, video_id: int, actions: list):
-        video = VideoService.get_video(db, video_id)
-        if video:
-            video.actions = actions
-            video.detect = True  # Устанавливаем флаг detect в True, так как действия были обнаружены
-            db.commit()
-            db.refresh(video)
-        return video
 
     @staticmethod
     def update_video_status(db: Session, video_id: int, status: str):
@@ -89,7 +80,7 @@ class VideoService:
         return f"{name}_{unique_hash}"
 
     @staticmethod
-    def get_camera_videos(db: Session, camera_id: int):
+    def get_camera_videos(db: Session, camera_id: UUID):
         """Получить все видео для конкретной камеры"""
         return db.query(Video)\
             .filter(Video.camera_id == camera_id)\
@@ -97,7 +88,7 @@ class VideoService:
             .all()
 
     @staticmethod
-    def get_latest_camera_video(db: Session, camera_id: int):
+    def get_latest_camera_video(db: Session, camera_id: UUID):
         """Получить последнее видео для камеры"""
         return db.query(Video)\
             .filter(Video.camera_id == camera_id)\

@@ -1,6 +1,6 @@
 # Video Aggression Detection System
 
-Система анализа видео для детекции агрессивных действий через построение скелетов с использованием YOLOv8 Pose и FastAPI.
+Система анализа видео для детекции агрессивных действий через построение скелетов с использованием YOLOv8 Pose, FastAPI и Celery.
 
 ## 📌 Основные возможности
 
@@ -31,6 +31,8 @@
 docker compose up --build
 
 ## 📂 Структура проекта
+
+```text
 Copy
 ├── app
 │   ├── db              # Database models and sessions
@@ -42,7 +44,7 @@ Copy
 ├── Dockerfile
 ├── docker-compose.yml
 └── requirements.txt
-
+```
 
 ## 🧩 Архитектура системы
 
