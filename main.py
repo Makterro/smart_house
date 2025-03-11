@@ -1,24 +1,25 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from app.core.config import settings
 from app.api.v1.endpoints import video_api, webhook
-from app.db.base import Base, engine
 import logging
-import shutil
-import os
-from pathlib import Path
+from fastapi.middleware.cors import CORSMiddleware
 
-# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
-# Монтирование статических файлов
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.mount("/media", StaticFiles(directory="media"), name="media")
 
-# Подключение роутеров
 app.include_router(video_api.router, prefix=settings.API_V1_STR)
 app.include_router(webhook.router, prefix=settings.API_V1_STR)
 
