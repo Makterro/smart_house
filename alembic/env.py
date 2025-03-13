@@ -9,7 +9,7 @@ from alembic import context
 # Импортируем настройки из Pydantic
 from app.core.config import settings
 from app.db.base import Base  # Подключаем модели
-from app.models import video  # Импортируй конкретные модели
+from app.models.video import Video  # Импортируй конкретные модели
 
 
 # this is the Alembic Config object, which provides
@@ -21,10 +21,16 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+DB_USER='user'
+DB_PASSWORD='password'
+DB_HOST='localhost'
+DB_PORT='5432'
+DB_NAME='smart_house'
+
 # Подставляем URL базы данных из Pydantic Settings
 config.set_main_option(
     "sqlalchemy.url",
-    f"postgresql://postgres:12345678@localhost:5432/my_database"
+    f"postgresql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
 )
 # config.set_main_option(
 #     "sqlalchemy.url",
