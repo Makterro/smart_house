@@ -4,6 +4,9 @@ from app.core.config import settings
 from app.api.v1.endpoints import video_api, webhook
 import logging
 from fastapi.middleware.cors import CORSMiddleware
+from app.db.base import Base, engine
+from app.models.video import Video
+from sqlalchemy import Table
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,9 +28,19 @@ app.include_router(webhook.router, prefix=settings.API_V1_STR)
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Запускается при остановке приложения"""
     logger.info("Завершение работы приложения")
 
+@app.on_event("startup")
+async def startup():
+    logger.info("Dropping and creating database tables...")
+
+    # Base.metadata.drop_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
+
+    Video.__table__.drop(engine, checkfirst=True)
+    Video.__table__.create(engine, checkfirst=True)
+
+    logger.info("Database tables recreated successfully!")
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(

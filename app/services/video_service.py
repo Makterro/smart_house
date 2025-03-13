@@ -97,11 +97,11 @@ class VideoService:
 
     @staticmethod
     def save_video_actions(db: Session, video_id: int, actions: list):
-        """Сохраняет действия в JSON поле видео и меняет detect на True"""
+        """Сохраняет действия в JSON поле видео и меняет detect в зависимости от наличия данных"""
         video = VideoService.get_video(db, video_id)
         if video:
             video.actions = actions
-            video.detect = True
+            video.detect = bool(actions)
             db.commit()
             db.refresh(video)
         return video
