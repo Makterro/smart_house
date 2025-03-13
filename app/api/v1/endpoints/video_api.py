@@ -5,9 +5,8 @@ from app.core.config import settings
 from app.services.video_service import VideoService
 import logging
 from fastapi.responses import JSONResponse
-from datetime import datetime
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -45,10 +44,11 @@ def get_camera_videos(
     finish: datetime = None,
     db: Session = Depends(get_db)
 ):
-    # Преобразуем строки start и finish в объекты datetime, если они есть
-    start_datetime = datetime.fromisoformat(start) if start else None
-    finish_datetime = datetime.fromisoformat(finish) if finish else None
-    
+    if start and start.tzinfo is None:
+        start = start.replace(tzinfo=timezone.utc)
+    if finish and finish.tzinfo is None:
+        finish = finish.replace(tzinfo=timezone.utc)
+
     # Получаем все видео для данной камеры
     videos = VideoService.get_camera_videos(db, camera_id)
 
@@ -57,8 +57,8 @@ def get_camera_videos(
         raise HTTPException(status_code=404, detail="Видео не найдены")
 
     # Фильтруем видео по времени, если параметры start и finish заданы
-    if start_datetime and finish_datetime:
-        videos = [video for video in videos if video.start_time and video.end_time and start_datetime <= video.start_time <= finish_datetime]
+    if start and finish:
+        videos = [video for video in videos if video.start_time and video.end_time and start <= video.start_time <= finish]
 
     # Формируем ответ в нужном формате
     video_data = [
