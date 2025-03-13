@@ -16,7 +16,7 @@ def send_webhook(video: Video):
 
     # Проверяем, что действия действительно были обнаружены
     if not actions:
-        logger.warning(f"❌ Не найдено действий в видео {video.id}")
+        logger.info(f"❌ Не найдено действий в видео {video.id}")
 
     webhook_url = "http://example.com/webhook"  # Эндпоинт вебхука
     payload = {

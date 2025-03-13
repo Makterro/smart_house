@@ -27,5 +27,3 @@ class Video(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     link = Column(String, nullable=True)  # Добавленное поле для хранения ссылки на видео в MinIO
-    link2 = Column(String, nullable=True)  # Добавленное поле для хранения ссылки на видео в MinIO
-    li12412 = Column(String, nullable=False)
