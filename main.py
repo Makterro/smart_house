@@ -38,7 +38,7 @@ async def startup():
     # Base.metadata.create_all(bind=engine)
 
     # Video.__table__.drop(engine, checkfirst=True)
-    Video.__table__.create(engine, checkfirst=True)
+    # Video.__table__.create(engine, checkfirst=True)
 
     logger.info("Database tables recreated successfully!")
 if __name__ == "__main__":

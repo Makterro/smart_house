@@ -4,12 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-
-
-# Импортируем настройки из Pydantic
 from app.core.config import settings
-from app.db.base import Base  # Подключаем модели
-from app.models.video import Video  # Импортируй конкретные модели
 
 
 # this is the Alembic Config object, which provides
@@ -21,27 +16,16 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-DB_USER='postgres'
-DB_PASSWORD='12345678'
-DB_HOST='localhost'
-DB_PORT='5432'
-DB_NAME='my_database'
-
-# Подставляем URL базы данных из Pydantic Settings
-config.set_main_option(
-    "sqlalchemy.url",
-    f"postgresql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
-)
-# config.set_main_option(
-#     "sqlalchemy.url",
-#     f"postgresql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
-# )
-
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
+from app.models.video import Video
 # target_metadata = mymodel.Base.metadata
-target_metadata = Base.metadata
+
+target_metadata = Video.metadata
+
+
+
+config.set_main_option('sqlalchemy.url', f'postgresql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}')
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
