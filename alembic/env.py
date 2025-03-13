@@ -21,11 +21,11 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-DB_USER='user'
-DB_PASSWORD='password'
+DB_USER='postgres'
+DB_PASSWORD='12345678'
 DB_HOST='localhost'
 DB_PORT='5432'
-DB_NAME='smart_house'
+DB_NAME='my_database'
 
 # Подставляем URL базы данных из Pydantic Settings
 config.set_main_option(
