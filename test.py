@@ -13,8 +13,11 @@ DB_HOST = "localhost"
 DB_PORT = "5432"
 DB_NAME = "my_database"
 
-# Формируем URL для подключения
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# # Формируем URL для подключения
+# DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+
+DATABASE_URL = f"postgresql+asyncpg://user:pwd@localhost:5432/app"
 
 # Создаем движок SQLAlchemy
 engine = create_engine(DATABASE_URL)

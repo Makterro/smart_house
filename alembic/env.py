@@ -9,6 +9,7 @@ from alembic import context
 # Импортируем настройки из Pydantic
 from app.core.config import settings
 from app.db.base import Base  # Подключаем модели
+from app.models import video  # Импортируй конкретные модели
 
 
 # this is the Alembic Config object, which provides
