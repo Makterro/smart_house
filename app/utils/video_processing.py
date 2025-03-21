@@ -62,7 +62,7 @@ def process_video_with_different_fps(video_id: int, video_name: str, video_folde
     try:
         db = SessionLocal()
         VideoService.update_video_status(db, video_id, VideoStatus.PROCESSING)
-        video_path = str(Path("media") / video_folder / video_name)
+        video_path = str(settings.MEDIA_DIR / video_folder / video_name)
 
         logger.info(f"🚀 Начинаем обработку видео: {video_path}")
 

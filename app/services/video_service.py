@@ -41,7 +41,7 @@ class VideoService:
             db.refresh(video)
 
             # Формируем ссылку на видео в MinIO
-            video_link = f"http://{settings.MINIO_ENDPOINT}/video-stream/{filename}"
+            video_link = f"http://{settings.MINIO_ENDPOINT}/{settings.MINIO_BUCKET_NAME}/{folder}/{filename}"
             video.link = video_link
 
             # Сохраняем ссылку в базе данных

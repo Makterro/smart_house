@@ -34,9 +34,6 @@ def minio_webhook(
 
             # Для событий создания (Put или CompleteMultipartUpload)
             if event.EventName in ["s3:ObjectCreated:Put", "s3:ObjectCreated:CompleteMultipartUpload"]:
-                folder_name = VideoService.generate_folder_name(object_key)
-                logger.info(f"Сгенерировано имя папки: {folder_name}")
-
                 # Преобразуем строки метаданных в datetime
                 start_time_str = user_metadata.get("X-Amz-Meta-Start", "Не указано")
                 end_time_str = user_metadata.get("X-Amz-Meta-End", "Не указано")
@@ -51,7 +48,7 @@ def minio_webhook(
                 video = VideoService.create_video(
                     db=db,
                     filename=os.path.basename(object_key),
-                    folder=folder_name,
+                    folder=os.path.dirname(object_key),
                     camera_id=src_id,
                     start_time=start_time,
                     end_time=end_time,
