@@ -30,7 +30,7 @@ class MinioService:
             self.client.fget_object(bucket_name, object_name, str(file_path))
             return True
         except Exception as e:
-            logging.ERROR(f"Error downloading from MinIO: {e}")
+            logging.error(f"Error downloading from MinIO: {e}")
             return False 
     
     def set_tags(
@@ -45,7 +45,7 @@ class MinioService:
                 object_tags[k] = str(v)
 
             self.client.set_object_tags(bucket_name, object_name, object_tags)
-            logging.INFO(f"✅ Метаданные обновлены для {object_name}")
+            logging.info(f"✅ Метаданные обновлены для {object_name}")
         except S3Error as e:
-            logging.ERROR(f"⚠️ Ошибка при установке тегов объекта MinIO: {e}")
+            logging.error(f"⚠️ Ошибка при установке тегов объекта MinIO: {e}")
             return False

@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
     # Base.metadata.create_all(bind=engine)
 
     # Video.__table__.drop(engine, checkfirst=True)
-    # Video.__table__.create(engine, checkfirst=True)
+    Video.__table__.create(engine, checkfirst=True)
     
     yield
     # shutdown

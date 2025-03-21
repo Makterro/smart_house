@@ -40,8 +40,7 @@ def send_webhook(video: Video, webhook_url: str):
         if response.status_code == 200:
             logger.info(f"✅ Вебхук успешно отправлен для видео {video.id}")
         else:
-            logger.error(f"❌ Ошибка при отправке вебхука: {response.status_code}")
+            logger.error(f"❌ Ошибка при отправке вебхука для видео {video.id} status: {response.status_code}")
+            
     except Exception as e:
         logger.error(f"⚠️ Ошибка при отправке вебхука: {e}")
-
-    logger.info(f"✅ Вебхук успешно отправлен для видео {video.id}")

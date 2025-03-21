@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 # Загрузка модели YOLOv8 Pose
 MODEL_PATH = "yolov8x-pose.pt"
 yolo_model = YOLO(MODEL_PATH)
-logging.INFO(f"log cuda is available: {torch.cuda.is_available()}")
+logging.info(f"log cuda is available: {torch.cuda.is_available()}")
 logging.info(f"YOLO model device: {yolo_model.device}")
 
 def process_video(video_path: str, frame_step="fps"):
@@ -31,7 +31,11 @@ def process_video(video_path: str, frame_step="fps"):
         return []
 
     fps = int(cap.get(cv2.CAP_PROP_FPS))
-    step = fps if frame_step == "fps" else frame_step
+    
+    if frame_step == "fps":
+        step = fps # Анализировать 1 кадр в секунду
+    elif frame_step == "all":
+        step = 1  # Анализировать каждый кадр
 
     frame_count = 0
     skeletons = []
