@@ -29,7 +29,7 @@ def minio_webhook(
             bucket_name = unquote(record.s3.bucket.name)
             object_key = unquote(record.s3.object.key)
             logger.info(f"Обнаружен объект: {object_key} (Bucket: {bucket_name})")
-            user_metadata = unquote(record.s3.object.userMetadata)
+            user_metadata = {key: unquote(value) for key, value in record.s3.object.userMetadata.items()}
             logger.info(f"Метаданные объекта: {user_metadata}")
 
             # Для событий создания (Put или CompleteMultipartUpload)
