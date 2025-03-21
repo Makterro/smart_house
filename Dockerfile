@@ -39,5 +39,9 @@ RUN mkdir -p media
 # Открываем порт для FastAPI
 EXPOSE 8000
 
+COPY main.py alembic.ini ./
+COPY alembic/ /app/alembic/
+COPY app/ /app/app/
+
 # Запуск FastAPI
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

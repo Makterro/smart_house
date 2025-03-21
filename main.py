@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
@@ -11,11 +13,29 @@ from sqlalchemy import Table
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title=settings.PROJECT_NAME)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # startup
+    logger.info("Запуск приложения.")
+
+    # Base.metadata.drop_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
+
+    # Video.__table__.drop(engine, checkfirst=True)
+    # Video.__table__.create(engine, checkfirst=True)
+    
+    yield
+    # shutdown
+    logger.info("Завершение работы приложения")
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    lifespan=lifespan
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[str(settings.ALLOW_ORIGINS)],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,27 +46,12 @@ app.mount("/media", StaticFiles(directory="media"), name="media")
 app.include_router(video_api.router, prefix=settings.API_V1_STR)
 app.include_router(webhook.router, prefix=settings.API_V1_STR)
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    logger.info("Завершение работы приложения")
-
-@app.on_event("startup")
-async def startup():
-    logger.info("Dropping and creating database tables...")
-
-    # Base.metadata.drop_all(bind=engine)
-    # Base.metadata.create_all(bind=engine)
-
-    # Video.__table__.drop(engine, checkfirst=True)
-    # Video.__table__.create(engine, checkfirst=True)
-
-    logger.info("Database tables recreated successfully!")
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "main:app",
-        host="127.0.0.1",
-        port=8080,
+        host=str(settings.HOST_IP),
+        port=int(settings.HOST_PORT),
         reload=settings.DEBUG
     )
 

@@ -2,7 +2,6 @@ from celery import Celery
 from app.core.config import settings
 from app.services.minio_service import MinioService
 from app.services.video_service import VideoService
-from app.utils.video_processing import process_video
 from app.db.session import SessionLocal
 import logging
 
@@ -43,6 +42,8 @@ def download_video_task(bucket_name: str, object_name: str, video_id: int):
 @celery.task(name='process_video')
 def process_video_task(video_id: int):
     """Обрабатывает видео"""
+    from app.utils.video_processing import process_video_with_different_fps
+    
     try:
         db = SessionLocal()
         video = VideoService.get_video(db, video_id)
@@ -53,10 +54,9 @@ def process_video_task(video_id: int):
         processed_filename = f"processed_{video.filename}"
         
         # Обрабатываем видео
-        process_video(
+        process_video_with_different_fps(
             video_id,                 # video_id
             video.filename,           # video_name
-            processed_filename,       # output_name
             video.folder              # video_folder
         )
 

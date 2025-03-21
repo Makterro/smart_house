@@ -1,9 +1,16 @@
+import os
+import logging
+
 from minio import Minio
 from minio.error import S3Error
 from app.core.config import settings
-import os
+from typing_extensions import Any
 from pathlib import Path
-from minio.commonconfig import CopySource
+from minio.commonconfig import CopySource, Tags
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class MinioService:
     def __init__(self):
@@ -23,34 +30,22 @@ class MinioService:
             self.client.fget_object(bucket_name, object_name, str(file_path))
             return True
         except Exception as e:
-            print(f"Error downloading from MinIO: {e}")
+            logging.ERROR(f"Error downloading from MinIO: {e}")
             return False 
-        
-    def update_video_metadata(self, bucket_name: str, object_name: str, skeletons_found: bool):
-        """Обновляет метаданные видео в MinIO (status=processed, type=raw или processed)"""
+    
+    def set_tags(
+            self,
+            bucket_name: str,
+            object_name: str,
+            tags: dict[str, Any]
+    ):
         try:
-            # Получаем текущие метаданные
-            obj_stat = self.client.stat_object(bucket_name, object_name)
-            current_metadata = obj_stat.metadata
+            object_tags = Tags.new_object_tags()
+            for k, v in tags.items():
+                object_tags[k] = str(v)
 
-            # Обновляем метаданные: если скелеты найдены, type = processed, иначе raw
-            new_metadata = {
-                **current_metadata,  # Сохраняем существующие метаданные
-                "X-Amz-Meta-Status": "processed",
-                "X-Amz-Meta-Type": "processed" if skeletons_found else "raw"
-            }
-
-            # Копируем объект с обновленными метаданными
-            self.client.copy_object(
-                bucket_name,
-                object_name,
-                CopySource(bucket_name, object_name),
-                metadata=new_metadata,
-                metadata_directive="REPLACE"
-            )
-
-            print(f"✅ Метаданные обновлены для {object_name}: {new_metadata}")
-            return True
+            self.client.set_object_tags(bucket_name, object_name, object_tags)
+            logging.INFO(f"✅ Метаданные обновлены для {object_name}")
         except S3Error as e:
-            print(f"⚠️ Ошибка при обновлении метаданных MinIO: {e}")
+            logging.ERROR(f"⚠️ Ошибка при установке тегов объекта MinIO: {e}")
             return False

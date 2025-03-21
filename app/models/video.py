@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from app.db.base import Base
 import enum
 
-class VideoStatus(enum.Enum):
+class VideoStatus(str, enum.Enum):
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
