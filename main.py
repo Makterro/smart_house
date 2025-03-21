@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.base import Base, engine
 from app.models.video import Video
 from sqlalchemy import Table
+import shutil
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,12 +18,18 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # startup
     logger.info("Запуск приложения.")
+    if settings.DEBUG:
+        # Base.metadata.drop_all(bind=engine)
+        # Base.metadata.create_all(bind=engine)
 
-    # Base.metadata.drop_all(bind=engine)
-    # Base.metadata.create_all(bind=engine)
+        # Video.__table__.drop(engine, checkfirst=True)
+        Video.__table__.create(engine, checkfirst=True)
 
-    # Video.__table__.drop(engine, checkfirst=True)
-    Video.__table__.create(engine, checkfirst=True)
+        for item in settings.MEDIA_DIR.iterdir():
+            if item.is_file():
+                item.unlink()
+            elif item.is_dir():
+                shutil.rmtree(item)
     
     yield
     # shutdown
