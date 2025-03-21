@@ -7,6 +7,7 @@ from app.worker import download_video_task
 import logging
 import os
 from datetime import datetime
+from urllib.parse import unquote
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -25,18 +26,16 @@ def minio_webhook(
             return {"message": "Ignored event"}
 
         for record in event.Records:
-            bucket_name = record.s3.bucket.name
-            object_key = record.s3.object.key
+            bucket_name = unquote(record.s3.bucket.name)
+            object_key = unquote(record.s3.object.key)
             logger.info(f"Обнаружен объект: {object_key} (Bucket: {bucket_name})")
-            user_metadata = record.s3.object.userMetadata
+            user_metadata = unquote(record.s3.object.userMetadata)
             logger.info(f"Метаданные объекта: {user_metadata}")
 
             # Для событий создания (Put или CompleteMultipartUpload)
             if event.EventName in ["s3:ObjectCreated:Put", "s3:ObjectCreated:CompleteMultipartUpload"]:
                 folder_name = VideoService.generate_folder_name(object_key)
                 logger.info(f"Сгенерировано имя папки: {folder_name}")
-
-                
 
                 # Преобразуем строки метаданных в datetime
                 start_time_str = user_metadata.get("X-Amz-Meta-Start", "Не указано")
