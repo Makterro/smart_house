@@ -68,7 +68,8 @@ def process_video_with_different_fps(video_id: int, video_name: str, video_folde
 
         # Первый проход (fps)
         skeletons_fps = process_video(video_path, frame_step="fps")
-        
+
+        minio_service = MinioService()
         if skeletons_fps:
             logger.info(f"✅ Найдено {len(skeletons_fps)} кадров со скелетами в {video_name}, начинаем повторную обработку")
             
@@ -79,7 +80,6 @@ def process_video_with_different_fps(video_id: int, video_name: str, video_folde
             VideoService.update_video_skeletons(db, video_id, skeletons_all)
             detect_actions(video_id)
 
-            minio_service = MinioService()
             minio_service.set_tags(settings.MINIO_BUCKET_NAME, video_name, {'type': 'significant'})
 
             try:

@@ -3,10 +3,10 @@ from typing import List, Dict, Optional
 
 class S3Object(BaseModel):
     key: str
-    size: int
-    eTag: str
-    contentType: str
-    userMetadata: Dict[str, str]
+    size: int | None = None
+    eTag: str | None = None
+    contentType: str | None = None
+    userMetadata: Dict[str, str] | None = None
 
 class S3Bucket(BaseModel):
     name: str

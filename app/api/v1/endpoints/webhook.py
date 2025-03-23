@@ -29,12 +29,13 @@ def minio_webhook(
             bucket_name = unquote(record.s3.bucket.name)
             object_key = unquote(record.s3.object.key)
             logger.info(f"Обнаружен объект: {object_key} (Bucket: {bucket_name})")
-            user_metadata = {key: unquote(value) for key, value in record.s3.object.userMetadata.items()}
-            logger.info(f"Метаданные объекта: {user_metadata}")
+
 
             # Для событий создания (Put или CompleteMultipartUpload)
             if event.EventName in ["s3:ObjectCreated:Put", "s3:ObjectCreated:CompleteMultipartUpload"]:
                 # Преобразуем строки метаданных в datetime
+                user_metadata = {key: unquote(value) for key, value in record.s3.object.userMetadata.items()}
+                logger.info(f"Метаданные объекта: {user_metadata}")
                 start_time_str = user_metadata.get("X-Amz-Meta-Start", "Не указано")
                 end_time_str = user_metadata.get("X-Amz-Meta-End", "Не указано")
 
