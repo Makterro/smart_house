@@ -70,6 +70,7 @@ def process_video_with_different_fps(video_id: int, video_name: str, video_folde
         skeletons_fps = process_video(video_path, frame_step="fps")
 
         minio_service = MinioService()
+        object_name = f"{video_folder}/{video_name}"
         if skeletons_fps:
             logger.info(f"✅ Найдено {len(skeletons_fps)} кадров со скелетами в {video_name}, начинаем повторную обработку")
             
@@ -80,7 +81,7 @@ def process_video_with_different_fps(video_id: int, video_name: str, video_folde
             VideoService.update_video_skeletons(db, video_id, skeletons_all)
             detect_actions(video_id)
 
-            minio_service.set_tags(settings.MINIO_BUCKET_NAME, video_name, {'type': 'significant'})
+            minio_service.set_tags(settings.MINIO_BUCKET_NAME, object_name, {'type': 'significant'})
 
             try:
                 os.remove(video_path)
@@ -92,7 +93,7 @@ def process_video_with_different_fps(video_id: int, video_name: str, video_folde
             send_webhook(video, settings.MANAGMENT_SERVICE_ENDPOINT_WEBHOOK)
 
         else:
-            minio_service.set_tags(settings.MINIO_BUCKET_NAME, video_name, {'type': 'insignificant'})
+            minio_service.set_tags(settings.MINIO_BUCKET_NAME, object_name, {'type': 'insignificant'})
             
         VideoService.update_video_status(db, video_id, VideoStatus.COMPLETED)
         db.close()
