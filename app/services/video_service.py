@@ -6,6 +6,10 @@ from app.core.config import settings
 from sqlalchemy import desc
 from datetime import datetime, timedelta
 from uuid import UUID
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class VideoService:
     @staticmethod
@@ -113,9 +117,18 @@ class VideoService:
 
     @staticmethod
     def delete_video(db: Session, video_id: int):
-        """Удалить видео по ID."""
+        """Удалить видео по ID и удалить файл из файловой системы."""
         video = VideoService.get_video(db, video_id)
         if video:
+            # Формируем путь к файлу
+            file_path = str(settings.MEDIA_DIR / video.folder / video.filename)
+
+            # Удаляем файл, если он существует
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                logger.info(f"Файл {file_path} удален из файловой системы.")
+
+            # Удаляем запись из базы данных
             db.delete(video)
             db.commit()
             return True
