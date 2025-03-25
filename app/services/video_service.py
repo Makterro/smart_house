@@ -106,3 +106,17 @@ class VideoService:
             db.refresh(video)
         return video
     
+    @staticmethod
+    def get_video_by_filename(db: Session, filename: str):
+        """Получить видео по имени файла."""
+        return db.query(Video).filter(Video.filename == filename).first()
+
+    @staticmethod
+    def delete_video(db: Session, video_id: int):
+        """Удалить видео по ID."""
+        video = VideoService.get_video(db, video_id)
+        if video:
+            db.delete(video)
+            db.commit()
+            return True
+        return False

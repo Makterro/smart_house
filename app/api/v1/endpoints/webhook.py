@@ -69,7 +69,7 @@ def minio_webhook(
                 logger.info(f"Удаление объекта: {object_key}")
 
                 # Ищем видео в БД по ключу объекта
-                video = VideoService.get_video_by_filename(db, object_key)
+                video = VideoService.get_video_by_filename(db, os.path.basename(object_key))
                 if video:
                     # Удаляем видео из базы данных
                     VideoService.delete_video(db, video.id)
