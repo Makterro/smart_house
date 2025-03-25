@@ -1,27 +1,32 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from app.db.session import get_db
-from app.schemas.minio_webhook import MinioWebhook
-from app.services.video_service import VideoService
-from app.worker import download_video_task
 import logging
 import os
 from datetime import datetime
 from urllib.parse import unquote
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from starlette import status
+
+from app.db.session import get_db
+from app.schemas.minio_webhook import MinioWebhook
+from app.services.video_service import VideoService
+from app.worker import download_video_task
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 @router.post("/webhook/minio")
 def minio_webhook(
-    event: MinioWebhook,
-    db: Session = Depends(get_db)
+        event: MinioWebhook,
+        db: Session = Depends(get_db)
 ):
     try:
         logger.info(f"Получено событие MinIO: {event.EventName}")
 
         # Обрабатываем только нужные события
-        if event.EventName not in ["s3:ObjectCreated:Put", "s3:ObjectCreated:CompleteMultipartUpload", "s3:ObjectRemoved:Delete"]:
+        if event.EventName not in ["s3:ObjectCreated:Put", "s3:ObjectCreated:CompleteMultipartUpload",
+                                   "s3:ObjectRemoved:Delete"]:
             logger.info(f"Игнорируем событие: {event.EventName}")
             return {"message": "Ignored event"}
 
@@ -29,7 +34,6 @@ def minio_webhook(
             bucket_name = unquote(record.s3.bucket.name)
             object_key = unquote(record.s3.object.key)
             logger.info(f"Обнаружен объект: {object_key} (Bucket: {bucket_name})")
-
 
             # Для событий создания (Put или CompleteMultipartUpload)
             if event.EventName in ["s3:ObjectCreated:Put", "s3:ObjectCreated:CompleteMultipartUpload"]:
@@ -78,4 +82,4 @@ def minio_webhook(
 
     except Exception as e:
         logger.exception(f"Ошибка при обработке вебхука MinIO: {e}")
-        return {"error": str(e)}
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": str(e)})
