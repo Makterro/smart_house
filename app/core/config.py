@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     HOST_IP: str = "127.0.0.1"
     HOST_PORT: int = 8080
     ALLOW_ORIGINS: str
+    YOLO_MODEL_PATH: str = 'yolo11x-pose.pt'
     
     # MinIO настройки
     MINIO_ENDPOINT: str = "89.105.137.28:9000"

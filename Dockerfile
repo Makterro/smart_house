@@ -43,5 +43,8 @@ COPY main.py alembic.ini ./
 COPY alembic/ /app/alembic/
 COPY app/ /app/app/
 
+# Добавляем папку sr в системный путь Python
+ENV PYTHONPATH="/app/src:$PYTHONPATH"
+
 # Запуск FastAPI
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
