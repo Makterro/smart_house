@@ -63,10 +63,10 @@ def process_video(video_path: str, frame_step="fps") -> tuple[list[tuple[int, li
             _, frame = cap.retrieve()
             results = list(yolo_model.predict(frame, 0.5, verbose=False))
             if len(results[0].boxes.xyxy) == 0:
-                skeletons.append({"frame": frame_number, "keypoints": []})
+                skeletons.append((frame_number, []))
             else:
                 keypoints = target_transform_result(results[0])
-                skeletons.append({"frame": frame_number, "keypoints": keypoints})
+                skeletons.append((frame_number, keypoints))
         
         frame_number += 1
 

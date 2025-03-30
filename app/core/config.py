@@ -9,7 +9,6 @@ class Settings(BaseSettings):
     HOST_IP: str = "127.0.0.1"
     HOST_PORT: int = 8080
     ALLOW_ORIGINS: str
-    YOLO_MODEL_PATH: str = 'yolo11x-pose.pt'
     
     # MinIO настройки
     MINIO_ENDPOINT: str = "89.105.137.28:9000"
@@ -30,6 +29,12 @@ class Settings(BaseSettings):
     # Webhook
     MANAGMENT_SERVICE_ENDPOINT_WEBHOOK: str
     
+    # Neural Network Settings
+    CONSECUTIVE_FRAMES_THRESHOLD: int = 3  # Количество кадров подряд, которое необходимо для отметки Realy: true
+    FRAMES_TO_CHECK_AROUND: int = 3  # Количество проверяемых кадров до и после (включая сам текущий)
+    SEQ_STEP: int  = 8  # Шаг, с которым будут сегментироваться данные для анализа
+    YOLO_MODEL_PATH: str = 'yolo11x-pose.pt'
+
     # Пути
     MEDIA_DIR: str = "media"
 

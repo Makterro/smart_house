@@ -13,6 +13,7 @@ from collections import defaultdict
 from tqdm import tqdm
 from typing_extensions import Sequence
 from ultralytics.engine.results import Results
+from app.core.config import settings
 from enum import Enum
 
 
@@ -21,10 +22,7 @@ logger = logging.getLogger(__name__)
 logging.info(f"log cuda is available for action recognition: {torch.cuda.is_available()}")
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-seq_len = 10  # Длина последовательности
-seq_step = 2  # Шаг между кадрами
 landmark_count = 17  # Число ключевых точек
-num_classes = 3  # Количество классов
 
 labels = ["3_WALK", "1_SQUAT", "8_LYING"]
 
@@ -156,7 +154,7 @@ def predict_sequence(
     return actions
 
 
-def detect_actions(video_id: int, skeletons: tuple[list[tuple[int, list[tuple[float, float]]]], int], fps: int):
+def detect_actions(video_id: int, skeletons, fps: int):
     """Функция распознавания действий через нейронку"""
     try:
         detected_actions = []
@@ -167,34 +165,75 @@ def detect_actions(video_id: int, skeletons: tuple[list[tuple[int, list[tuple[fl
 
         # Обрабатываем последовательности
         for sequence in skeletons_sequences:
-            actions = predict_sequence([skeleton for i, skeleton in sequence], seq_step=2)
+            actions = predict_sequence([skeleton for i, skeleton in sequence], seq_step=settings.SEQ_STEP)
             sequence_length = len(sequence)
 
             # Собираем кадры и классы с оценками
+            class_durations = defaultdict(float)  # Длительность каждого класса
+            action_data_list = []
+
+            # Собираем все данные для каждого класса
             for classname, action_list in actions.items():
                 for from_i, to_i, conf in action_list:
                     start_frame = sequence[from_i][0]
                     end_frame = sequence[min(to_i, sequence_length - 1)][0]
-                    
+
                     # Преобразуем кадры в секунды
                     start_time = start_frame / fps
                     end_time = end_frame / fps
+                    duration = end_time - start_time  # Продолжительность действия в секундах
 
+                    # Обновляем длительность действия для данного класса
+                    class_durations[classname] += duration
+
+                    # Добавляем предсказания в список
                     action_data = {
                         "class": classname,
                         "start_frame": start_frame,
                         "end_frame": end_frame,
                         "start_time": start_time,
                         "end_time": end_time,
-                        "confidence": conf
+                        "confidence": conf,
+                        "Realy": False  # Изначально Realy False
                     }
 
-                    # Добавляем предсказания в результат по кадрам
-                    result[start_frame].append(action_data)
+                    action_data_list.append(action_data)
 
-                    # Проверяем, является ли действие опасным
-                    if classname in BAD_ACTIONS:
-                        detected_actions.append(action_data)
+            # Сортируем по start_frame
+            action_data_list.sort(key=lambda x: x['start_frame'])
+
+            # Проверяем для каждой записи, есть ли 3 подряд идущих записи с одинаковым классом
+            for i, action_data in enumerate(action_data_list):
+                class_name = action_data["class"]
+                # Проверяем 3 подряд идущих кадра с одинаковым классом
+                consecutive_count = 0
+
+                # Проверяем предыдущие кадры
+                for j in range(i-1, max(i-settings.FRAMES_TO_CHECK_AROUND, -1), -1):  # Проверяем до N предыдущих кадров
+                    if action_data_list[j]["class"] == class_name:
+                        consecutive_count += 1
+                    else:
+                        break
+
+                # Проверяем следующие кадры
+                for j in range(i+1, min(i+settings.FRAMES_TO_CHECK_AROUND, len(action_data_list))):  # Проверяем до N следующих кадров
+                    if action_data_list[j]["class"] == class_name:
+                        consecutive_count += 1
+                    else:
+                        break
+
+                # Если найдено заданное количество подряд идущих кадров с одинаковым классом, помечаем как Realy: true
+                if consecutive_count >= settings.CONSECUTIVE_FRAMES_THRESHOLD- 1:  # Мы включаем сам текущий кадр
+                    action_data["Realy"] = True
+                else:
+                    action_data["Realy"] = False
+
+                # Добавляем в итоговый результат
+                result[action_data["start_frame"]].append(action_data)
+
+                # Проверяем, является ли действие опасным и подтвержденным
+                if classname in BAD_ACTIONS and action_data["Realy"]:
+                    detected_actions.append(action_data)
 
         # Сортировка по start_frame
         sorted_result = dict(sorted(result.items()))
@@ -209,7 +248,7 @@ def detect_actions(video_id: int, skeletons: tuple[list[tuple[int, list[tuple[fl
         db.close()
 
         if detected_actions:
-            logger.info(f"🚨 Найдены подозрительные действия для видео {video_id}: {detected_actions}")
+            logger.info(f"🚨 Найдены подозрительные действия для видео {video_id}: {len(detected_actions)}")
         else:
             logger.info(f"✅ Никаких подозрительных действий в видео {video_id} не обнаружено")
 

@@ -1,0 +1,68 @@
+{
+    "0": [
+        {
+            "class": "1_SQUAT",
+            "start_frame": 0,
+            "end_frame": 80,
+            "start_time": 0.0,
+            "end_time": 2.6666666666666665,
+            "confidence": 0.9999053478240967,
+            "Realy": false
+        }
+    ],
+    "80": [
+        {
+            "class": "3_WALK",
+            "start_frame": 80,
+            "end_frame": 160,
+            "start_time": 2.6666666666666665,
+            "end_time": 5.333333333333333,
+            "confidence": 0.9952864050865173,
+            "Realy": false
+        }
+    ],
+    "160": [
+        {
+            "class": "8_LYING",
+            "start_frame": 160,
+            "end_frame": 240,
+            "start_time": 5.333333333333333,
+            "end_time": 8.0,
+            "confidence": 0.9995847344398499,
+            "Realy": false
+        }
+    ],
+    "240": [
+        {
+            "class": "8_LYING",
+            "start_frame": 240,
+            "end_frame": 320,
+            "start_time": 8.0,
+            "end_time": 10.666666666666666,
+            "confidence": 0.6256778240203857,
+            "Realy": false
+        }
+    ],
+    "320": [
+        {
+            "class": "3_WALK",
+            "start_frame": 320,
+            "end_frame": 400,
+            "start_time": 10.666666666666666,
+            "end_time": 13.333333333333334,
+            "confidence": 0.9999871253967285,
+            "Realy": false
+        }
+    ],
+    "400": [
+        {
+            "class": "3_WALK",
+            "start_frame": 400,
+            "end_frame": 444,
+            "start_time": 13.333333333333334,
+            "end_time": 14.8,
+            "confidence": 0.9999986886978149,
+            "Realy": false
+        }
+    ]
+}
