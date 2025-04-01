@@ -46,7 +46,7 @@ var/
 .env
 yolov8x-pose.pt
 yolo11x-pose.pt
+results_step2.json
 test1.mp4
 media/
 minio-service/
-results_step2.json
