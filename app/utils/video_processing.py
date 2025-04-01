@@ -12,7 +12,6 @@ from app.models.video import VideoStatus
 from app.utils.action_recognition import detect_actions
 from app.utils.send_webhook import send_webhook
 from app.core.config import settings
-from tqdm import tqdm
 from ultralytics.engine.results import Results
 
 
@@ -54,7 +53,7 @@ def process_video(video_path: str, frame_step="fps") -> tuple[list[tuple[int, li
     skeletons: list[tuple[int, list[tuple[float, float]]]] = []
     frame_number = 0
 
-    for _ in tqdm(range(length)):
+    for _ in range(length):
         retrieved = cap.grab()
         if not retrieved:
             break

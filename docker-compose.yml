@@ -10,6 +10,7 @@ services:
     volumes:
       - .:/app
       - ./media:/app/media
+      - ./results_step2.json:/app/results_step2.json
     ports:
       - "8001:8000"
     environment:
@@ -34,6 +35,7 @@ services:
     volumes:
       - .:/app
       - ./media:/app/media
+      - ./results_step2.json:/app/results_step2.json
     depends_on:
       - redis
       - pg
@@ -51,6 +53,7 @@ services:
     volumes:
       - .:/app
       - ./media:/app/media
+      - ./results_step2.json:/app/results_step2.json
     depends_on:
       - redis
       - pg

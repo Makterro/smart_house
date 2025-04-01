@@ -49,3 +49,4 @@ yolo11x-pose.pt
 test1.mp4
 media/
 minio-service/
+results_step2.json

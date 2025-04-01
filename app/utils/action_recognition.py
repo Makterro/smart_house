@@ -10,7 +10,6 @@ import cv2
 from app.db.session import SessionLocal
 from app.services.video_service import VideoService
 from collections import defaultdict
-from tqdm import tqdm
 from typing_extensions import Sequence
 from ultralytics.engine.results import Results
 from app.core.config import settings
@@ -124,15 +123,17 @@ def preprocess_frame(landmarks):
 def predict_sequence(
         frame_data: list[list[tuple[float, float]]],
         seq_len=10,
-        seq_step=2
+        seq_step=2,
+        window_step=1  # Новый параметр для сдвига окна
 ) -> dict[str, list[tuple[int, int, float]]]:
     actions = defaultdict(list)
     iteration_step = seq_len * seq_step
     length = len(frame_data)
-    steps = math.ceil(length / iteration_step)
-    for i in range(steps):
-        from_index = i * iteration_step
-        to_index = (i + 1) * iteration_step
+    
+    # Двигаем окно с шагом `window_step`
+    for from_index in range(0, length - seq_len + 1, window_step):
+        to_index = from_index + seq_len * seq_step
+        
         selected_frames = frame_data[from_index:to_index:seq_step]
         if len(selected_frames) < round(seq_len * 0.3):
             break
@@ -145,18 +146,21 @@ def predict_sequence(
         input_tensor = torch.stack(sequence_tensors).unsqueeze(0)
 
         with torch.no_grad():
-            print(f'{i+1}/{steps}')
             output = model(input_tensor)
             predicted_class = torch.argmax(output).item()
             conf = output[0][predicted_class].item()
 
         actions[labels[predicted_class]].append((from_index, to_index, conf))
+    
     return actions
+
+
 
 
 def detect_actions(video_id: int, skeletons, fps: int):
     """Функция распознавания действий через нейронку"""
     try:
+        logger.info('🪄Начинается распознавание действий🔮')
         detected_actions = []
 
         skeletons_sequences = extract_sequences(skeletons, 1)
@@ -165,7 +169,7 @@ def detect_actions(video_id: int, skeletons, fps: int):
 
         # Обрабатываем последовательности
         for sequence in skeletons_sequences:
-            actions = predict_sequence([skeleton for i, skeleton in sequence], seq_step=settings.SEQ_STEP)
+            actions = predict_sequence([skeleton for i, skeleton in sequence], seq_step=settings.SEQ_STEP, window_step=settings.WINDOW_STEP)
             sequence_length = len(sequence)
 
             # Собираем кадры и классы с оценками
@@ -232,8 +236,16 @@ def detect_actions(video_id: int, skeletons, fps: int):
                 result[action_data["start_frame"]].append(action_data)
 
                 # Проверяем, является ли действие опасным и подтвержденным
-                if classname in BAD_ACTIONS and action_data["Realy"]:
-                    detected_actions.append(action_data)
+                if action_data["Realy"] and class_name not in detected_actions:
+                    detected_actions.append(class_name)
+
+                # НЕ УДАЛЯТЬ ЭТО ДЛЯ ТЕСТИРОВАНИЯ
+                # logger.info(f"🔍 Проверка действия: {class_name}, Realy={action_data['Realy']}")
+                # if action_data["Realy"] and class_name not in detected_actions:
+                #     logger.info(f"✅ Добавляем действие: {class_name}")
+                #     detected_actions.append(class_name)
+                # else:
+                #     logger.info(f"❌ Действие {class_name} не добавлено (уже есть или Realy=False)")
 
         # Сортировка по start_frame
         sorted_result = dict(sorted(result.items()))
@@ -248,7 +260,8 @@ def detect_actions(video_id: int, skeletons, fps: int):
         db.close()
 
         if detected_actions:
-            logger.info(f"🚨 Найдены подозрительные действия для видео {video_id}: {len(detected_actions)}")
+            logger.info(f"🚨 Найдены действия для видео {video_id}: {len(detected_actions)}")
+            logger.info(f"📋 Список действий: {json.dumps(detected_actions, indent=4, ensure_ascii=False)}")
         else:
             logger.info(f"✅ Никаких подозрительных действий в видео {video_id} не обнаружено")
 

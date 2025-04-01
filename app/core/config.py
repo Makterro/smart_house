@@ -32,7 +32,8 @@ class Settings(BaseSettings):
     # Neural Network Settings
     CONSECUTIVE_FRAMES_THRESHOLD: int = 3  # Количество кадров подряд, которое необходимо для отметки Realy: true
     FRAMES_TO_CHECK_AROUND: int = 3  # Количество проверяемых кадров до и после (включая сам текущий)
-    SEQ_STEP: int  = 8  # Шаг, с которым будут сегментироваться данные для анализа
+    SEQ_STEP: int = 2  # Шаг, с которым будут сегментироваться данные для анализа
+    WINDOW_STEP: int = 5 # Шаг окна (с 1 по 10, с 2 по 11...)
     YOLO_MODEL_PATH: str = 'yolo11x-pose.pt'
 
     # Пути
