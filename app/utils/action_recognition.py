@@ -100,12 +100,16 @@ def extract_sequences(
                     # print(f"Предыдущий не пустой кадр: {prev_frame}")
                     # print(f"Следующий не пустой кадр: {next_frame}")
                     # print(f"Разница во времени: {time_diff:.2f} секунд")
-                    
+
                     if time_diff < 1.0:
-                        interpolated_skeleton = [
-                            [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2] 
-                            for p1, p2 in zip(prev_skeleton, next_skeleton)
-                        ]
+                        interpolated_skeleton = []
+                        for idx, (p1, p2) in enumerate(zip(prev_skeleton, next_skeleton)):
+                            if p1 == [0, 0] or p2 == [0, 0]:
+                                interpolated_skeleton.append([0, 0])
+                                # print(f"Точка {idx} имеет 0 в одном из кадров, устанавливаем (0,0)")
+                            else:
+                                interpolated_skeleton.append([(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2])
+                        
                         skeletons[start + i] = (data[0], interpolated_skeleton)
                         # НЕ УДАЛЯТЬ ДЛЯ ТЕСТИРОВАНИЯ
                         # print(f"Интерполирован кадр {data[0]}")
