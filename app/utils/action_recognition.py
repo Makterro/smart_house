@@ -63,6 +63,7 @@ target_transform_result = transform_result_xy_normalized
 def extract_sequences(
         skeletons: list[tuple[int, list[tuple[float, float]]]],
         n: int,
+        fps: int
 ) -> list[list[tuple[int, list[tuple[float, float]]]]]:
     sequences = []
     start = None
@@ -85,8 +86,32 @@ def extract_sequences(
                 seq.append(data)
                 space_counter = 0
             else:
+                # НЕ УДАЛЯТЬ ДЛЯ ТЕСТИРОВАНИЯ
+                # print(f"Пустой кадр: {data[0]}")
+                prev_index = next((j for j in range(start + i - 1, -1, -1) if skeletons[j][1]), None)
+                next_index = next((j for j in range(start + i + 1, skeletons_length) if skeletons[j][1]), None)
+                
+                if prev_index is not None and next_index is not None:
+                    prev_frame, prev_skeleton = skeletons[prev_index]
+                    next_frame, next_skeleton = skeletons[next_index]
+                    time_diff = (next_frame - prev_frame) / fps
+                    
+                    # НЕ УДАЛЯТЬ ДЛЯ ТЕСТИРОВАНИЯ
+                    # print(f"Предыдущий не пустой кадр: {prev_frame}")
+                    # print(f"Следующий не пустой кадр: {next_frame}")
+                    # print(f"Разница во времени: {time_diff:.2f} секунд")
+                    
+                    if time_diff < 1.0:
+                        interpolated_skeleton = [
+                            [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2] 
+                            for p1, p2 in zip(prev_skeleton, next_skeleton)
+                        ]
+                        skeletons[start + i] = (data[0], interpolated_skeleton)
+                        # НЕ УДАЛЯТЬ ДЛЯ ТЕСТИРОВАНИЯ
+                        # print(f"Интерполирован кадр {data[0]}")
+                
                 space_counter += 1
-
+                
             if space_counter >= n:
                 sequences.append(seq)
                 break
@@ -95,7 +120,9 @@ def extract_sequences(
             sequences.append(seq)
 
         start += i
-        while not skeletons[start][1]:
+        while start < skeletons_length and not skeletons[start][1]:
+            # НЕ УДАЛЯТЬ ДЛЯ ТЕСТИРОВАНИЯ
+            # print(f"Пропускаем пустой кадр: {skeletons[start][0]}")
             start += 1
             if start >= skeletons_length:
                 break
@@ -105,6 +132,12 @@ def extract_sequences(
             sequences.append([skeletons[start]])
         if remain <= 1:
             start = None
+
+    # НЕ УДАЛЯТЬ ДЛЯ ТЕСТИРОВАНИЯ
+    # output_json: str = "sequences.json"
+    # with open(output_json, "w") as f:
+    #     json.dump(sequences, f, indent=4)
+    # print(f"Sequences сохранены в {output_json}")
 
     return sequences
 
@@ -163,7 +196,7 @@ def detect_actions(video_id: int, skeletons, fps: int):
         logger.info('🪄Начинается распознавание действий🔮')
         detected_actions = []
 
-        skeletons_sequences = extract_sequences(skeletons, 1)
+        skeletons_sequences = extract_sequences(skeletons, 1, fps)
 
         result = defaultdict(list)
 
